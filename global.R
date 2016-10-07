@@ -1,5 +1,0 @@
-library(maptools)
-library(esacounties)
-library(rgdal)
-library(geojsonio)
-library(highcharter)
