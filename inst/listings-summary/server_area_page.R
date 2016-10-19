@@ -43,7 +43,7 @@ server_area_page <- function(input, output, session) {
     addCircles(data = filter(counties,GEOID %in% spec_select$GEOID),
                    lng = ~INTPTLON,
                    lat = ~INTPTLAT,
-                   radius = 1000, 
+                   radius = 5000, 
                    color = "black",
                    fillOpacity = 1,
                    stroke = FALSE
@@ -58,35 +58,50 @@ server_area_page <- function(input, output, session) {
     output$specTble <- DT::renderDataTable({
       filter(esacounties, GEOID == gid)%>%
       select(Scientific, Common)%>%
-      datatable(rownames = FALSE, selection = "single")
+      datatable(rownames = FALSE, selection = "single", colnames = c("Species", "Common Name"), caption = "Click a species name to see it's range displayed")
       })
   })
   
-  output$sp_cumm <- renderHighchart({
+  output$sp_cumm <- renderPlotly({
     #cummulative number of counties per species
-    hchart(species, type = "line", x = round(row_number(count)/nrow(species), 3), y = count)%>%
-      hc_title(text = "Range Sizes of Listed Species", align = "center")%>%
-      hc_yAxis(title = list(text = "<b>Counties in Species Range<b>", style = list(color = "black")),
-               type = "logarithmic",
-               labels = list(style = list(color = "black")))%>%
-      hc_xAxis(title = list(text = "<b>Percentage of Listed Species<\b>", style = list(color = "black")),
-               max = 1, min = 0, tickColor = "black",
-               labels = list(style = list(color = "black")))%>%
-      hc_tooltip(headerFormat = "% of Species: {point.x}<br>",
-                 pointFormat = "Counties in Range: {point.y}")
+    py<-plot_ly(arrange(species, count), x = ~count, source = "sp_dist")%>%
+      add_lines(y = ~round(row_number(count)/nrow(species), 3), name = "Cummulative", 
+            type = "scatter", mode = "lines", 
+            text = ~paste(round(row_number(count)/nrow(species),3)*100,"% of species occur in", count, "or fewer counties"), hoverinfo = "text")%>%
+      add_histogram(histnorm = "probability", name = "Histogram", xbins = list(start = 0.5, end = 3102.5, size = 1),
+                    text = ~paste("% of counties contain", "listed species"),
+                    hoverinfo = "none")%>%
+      layout(title = "Listed Species Range Sizes",
+             xaxis = list(title = "Number of Counties in Species' Range", type = "log", tickvals = c(0, 1, 5, 10, 50, 100, 500, 1000, 3000)),
+             yaxis = list(title = "Percentile of Species"),
+             legend = list(x = 0.05, y = 0.95))
   })
   
-  output$cn_cumm <- renderHighchart({
+  output$cn_cumm <- renderPlotly({
     #cummulative number of counties per species
-    hchart(arrange(counties,count), type = "line", x = round(row_number(count)/nrow(counties), 3), y = count)%>%
-      hc_title(text = "Listed Species per County", align = "center")%>%
-      hc_yAxis(title = list(text = "<b>Listed Species in County<b>", style = list(color = "black")),
-               type = "logarithmic", min = 1,
-               labels = list(style = list(color = "black")))%>%
-      hc_xAxis(title = list(text = "<b>Percentage of Counties<\b>", style = list(color = "black")),
-               max = 1, min = 0, tickColor = "black",
-               labels = list(style = list(color = "black")))%>%
-      hc_tooltip(headerFormat = "% of Counties: {point.x}<br>",
-                 pointFormat = "Species in County: {point.y}")
+    plot_ly(arrange(counties, count), x = ~count)%>%
+      add_lines(y = ~round(row_number(count)/nrow(counties), 3), name = "Cummulative", 
+            type = "scatter", mode = "lines", 
+            text = ~paste(round(row_number(count)/nrow(counties),3)*100,"% of counties contain", count, "or fewer species"), 
+            hoverinfo = "text")%>%
+      add_histogram(histnorm = "probability", name = "Histogram",
+                    #text = ~paste("% of counties contain", "listed species"),
+                    hoverinfo = "none")%>%
+      layout(title = "Listed Species per U.S. County",
+             xaxis = list(title = "Number of Listed Species per County", type = "log", tickvals = c(0, 1, 5, 10, 50, 100, 1000)),
+             yaxis = list(title = "Percentile of Counties"),
+             legend = list(x = 0.05, y = 0.95))
+      
   })
+
+ observeEvent(event_data("plotly_click", source = "sp_dist"),{
+  print(event_data("plotly_click", source = "sp_dist"))
+  sp_count <- event_data("plotly_click", source = "sp_dist")$x[[1]]
+  output$rngTble <- DT::renderDataTable({
+   filter(ungroup(species), count == sp_count)%>%
+   inner_join(TECP_domestic, by = c("Scientific" = "Scientific_Name"))%>%
+   select(Scientific, Common_Name, count)%>%
+   datatable(rownames = FALSE, selection = "none", colnames = c("Species", "Common Name", "Counties"))
+})})
 }
+

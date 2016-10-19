@@ -1,9 +1,27 @@
 Package: ESAListings
-Title: What the Package Does (one line, title case)
-Version: 0.0.0.9000
-Authors@R: person("First", "Last", email = "first.last@example.com", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
-Depends: R (>= 3.3.1)
-License: What license is it under?
+Type: Package
+Title: An R Data package for U.S. Endangered Species Act Listed Species
+Version: 1.0
+Authors@R: person("Evans", "Michael", email = "mevans@defenders.org", role = c("aut", "cre"))
+Maintainer: Michael Evans <mevans@defenders.org>
+Description: The data included in this package was created using records from the U.S. Fish and Wildlife Service's (FWS)
+ Environmental Conservation Online System (ECOS).  This database is the official agenc repository for publicly accessible
+ information about species listed under the Endangered Species Act (ESA).  Extracted data in this package is related to
+ taxanomic, geographic, and temporal information for all listed species.  The package includes a function to launch an
+ interactive web app that can be used to explore this data.
+Depends:
+    R (>= 3.3.1)
+License: BSD_2_clause + file LICENSE
 Encoding: UTF-8
 LazyData: true
+RoxygenNote: 5.0.1
+Dependencies:
+  dplyr,
+  DT,
+  highcharter,
+  leaflet,
+  plotly,
+  treemap,
+  shiny,
+  shinydashboard,
+  viridis

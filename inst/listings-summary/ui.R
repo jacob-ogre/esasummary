@@ -12,18 +12,20 @@ library(shiny)
 header <-  dashboardHeader(title = "ESA Listing Quickfacts")
 sidebar <-  dashboardSidebar(
     sidebarMenu(id = "sidebarmenu",
-      menuItem("Listings", tabName = "listings", icon = icon("stats")), 
-      conditionalPanel("input.sidebarmenu ==='listings'",
+      menuItem(h4("Listings"), tabName = "listings", icon = icon("bar-chart")), 
+      conditionalPanel("input.sidebarmenu ==='listings'& input.panel1 != 'Timeline'",
                        selectInput("tx_select", "Choose a Taxon", 
                            choices = setNames(as.list(c("",unique(regions$Group))),c("All",unique(regions$Group))), 
                            selected = "", multiple = FALSE)),
-      menuItem("Area", tabName = "area", icon = icon("globe")),
-      menuItem("Recovery", tabName = "recover")
+      menuItem(h4("Geography"), tabName = "area", icon = icon("globe"))
+#      conditionalPanel("input.sidebarmenu === 'area' & input.panel2 === 'U.S. Map'"),
+#      conditionalPanel("input.sidebarmenu === 'area' & input.panel2 === 'Range Sizes'"),
+#      menuItem("Recovery", tabName = "recover")
     )
   )
 body <- dashboardBody(  
   tabItems(
-   tabItem(tabName = "listings",
+   tabItem(tabName = "listings", h2("Summary of Listings"),
     fluidRow(
      valueBox(num_es, "Endangered Species", color = "red", width = 3),
      valueBox(num_th, "Threatened Species", color = "orange", width = 3),
@@ -31,45 +33,100 @@ body <- dashboardBody(
      valueBox(num_cn, "Candidate Species", color = "yellow", width = 3)
     ),
     fluidRow(
-     h2("Summary of Listings"),
      tabsetPanel(id = "panel1",
+      tabPanel("Timeline",
+       fluidRow(
+        column(9, 
+          box(plotlyOutput("time"), width = NULL, height = 450)
+        ),
+        column(3,
+          h2("Timeline of Listings"),
+          h4("This chart tracks the number of species listings over time.
+              Click on a line to see the species listed in a given year.",br(), br()),
+          DT::dataTableOutput("timeTbl"))
+       )
+      ),
       tabPanel("Taxa",
+       fluidRow(column(1, br()),
+        column(10,
+        h3("Listings by Taxonomic Group", align = "center"), 
+        h4("The bar chart below breaks down the number of listed species by taxa,
+        and listing status.", br(), "The treemap at right organizes this information hierarchicaly,
+        with box sizes corresponding to the realtive number in a category. Use the 
+        selector in the sidebar to choose a specific taxa.  You can see the number of listed species
+        in a given category by mousing over the boxes.  Finally, click on a section to
+        drill down to more detailed information within that group.")),
+        column(1, br())
+       ),
+       fluidRow(        
        box(highchartOutput("specbars")), 
        box(highchartOutput("spectree"))
+       )
       ),
-      tabPanel("Region",
+      tabPanel("Regions",
+       fluidRow(column(1, br()),
+        column(10,
+         h3("Listings by Region", align = "center"), 
+         h4("The bar chart below breaks down the number of listed species by FWS Region,
+            and listing status.", br(), "The treemap at right organizes this information hierarchicaly,
+            with box sizes corresponding to the realtive number in a category. Use the 
+            selector in the sidebar to choose a specific region.  You can see the number of listed species
+            in a given category by mousing over the boxes.  Finally, click on a section to
+            drill down to more detailed information within that group.")),
+        column(1, br()) 
+       ),
+       fluidRow(
        box(highchartOutput("regbars")), 
        box(highchartOutput("regtree"))
-      )#,
-#      tabPanel("Timeline",
-#       box(highchartOutput("time"))
+       )
       )
      )
+    )
     ),
   
   tabItem(tabName = "area",
 #  shinyjs::useShinyjs(),
     fluidRow(
-      h2("Listing Areas"),
+      
       tabsetPanel(id = "panel2",
-        tabPanel("MAP",
-          box(leafletOutput("map", height = 800), width = 9, height = 800
-          ),
-          box(DT::dataTableOutput("specTble"), width = 3, height = 800
+        tabPanel("U.S. Map",
+          fluidRow(
+            column(9, box(leafletOutput("map", height = 800), width = NULL, height = 800)
+            ),
+            column(3,
+          h2("Geography of Listings"),
+          h4("This map shows the number of listed species in each
+             U.S. county.  It can be used to identify 'hot spots' - 
+             areas with a high concentration of listed species, such as
+             southern California.  To see all the species listed in a county, 
+             click near the center of the county."),
+          DT::dataTableOutput("specTble")
+            )
           )
         ),
   
-      tabPanel("GRAPH",
+      tabPanel("Range Sizes",
         fluidRow(
-         column(8, box(highchartOutput("sp_cumm"), width = NULL, height = 400),
-               box(highchartOutput("cn_cumm"), width = NULL, height = 400)
+         column(8, box(plotlyOutput("sp_cumm"), width = NULL, height = 450),
+               box(plotlyOutput("cn_cumm"), width = NULL, height = 450)
          ),
-         column(4, br()))
+         column(4, h2("Distributions of Listed Species"),
+                   h4("The majority of listed species occupy limited ranges.
+                  The upper graph illustrates the distribution of listed
+                  species' range sizes, in terms of the number of 
+                  U.S. counties in which they occur.  Clicking on this graph
+                  will display a table of species with the selected range size.", br(), br(),
+                  "Similarly, most counties have few listed species, although
+                  this distribution is less skewed than the sizes 
+                  of species' ranges.  In 75% of U.S. counties, there are 
+                  8 or fewer listed species."),
+                DT::dataTableOutput("rngTble"))
+        )
       )
      )
     )
+   )
   )
-)
 )
 dashboardPage(header, sidebar, body)
 
