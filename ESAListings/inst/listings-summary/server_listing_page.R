@@ -23,28 +23,32 @@ observeEvent(input$tx_select, {
                     summarize(count = sum(count))})
 
 if(input$panel1=="Regions"){
-  tm_tx <- treemap(dat1,
-    index = c("Lead_Region", "Status"),
-    vSize = "count", type = "categorical", vColor = "Status",
-    fontsize.labels = c(16, 0),
-    align.labels = list(c("left","top"), c("center","center")),
-    bg.labels = 0, palette = list_pal[names(name_pal)%in%dat1$Status])
-  tm_tx$tm$color[tm_tx$tm$level == 1] <- NA
+  tm_tx <- list()
+  for(i in unique(dat1$Lead_Region)){
+    ls1 <- list(name = i, id = i, value = sum(dat1$count[dat1$Lead_Region == i]), color = NA)
+    tm_tx[[length(tm_tx)+1]] <- ls1
+  }
+  for(i in 1:length(dat1$count)){
+    ls2 <- list(parent = dat1$Lead_Region[i], name = dat1$Status[i], value = dat1$count[i], color = stat_pal(strsplit(dat1$Status[i]," ")[[1]][1]))
+    tm_tx[[length(tm_tx)+1]] <- ls2
+  }
 }
 
 if(input$panel1=="Taxa"){
-tm_rg <- treemap(dat2,
-          index = c("Group", "Status"),
-          vSize = "count", type = "categorical", vColor = "Status",
-          fontsize.labels = c(16, 0),
-          align.labels = list(c("left","top"), c("center","center")),
-          bg.labels = 0, palette = list_pal[names(name_pal)%in%dat2$Status])
-  tm_rg$tm$color[tm_rg$tm$level == 1] <- NA
+  tm_rg <- list()
+  for(i in unique(dat2$Group)){
+    ls1 <- list(name = i, id = i, value = sum(dat2$count[dat2$Group == i]), color = NA)
+    tm_rg[[length(tm_rg)+1]] <- ls1
+  }
+  for(i in 1:length(dat2$count)){
+    ls2 <- list(parent = dat2$Group[i], name = dat2$Status[i], value = dat2$count[i], color = stat_pal(strsplit(dat2$Status[i]," ")[[1]][1]))
+    tm_rg[[length(tm_rg)+1]] <- ls2
+  }
 }
 
 output$spectree <- renderHighchart({
  highchart()%>%
-    hc_add_series_treemap(tm_tx, allowDrillToNode = TRUE, layoutAlgorithm = "squarified",
+    hc_add_series(data = tm_tx, type = "treemap", allowDrillToNode = TRUE, layoutAlgorithm = "squarified",
                           levels = list(list(level = 1,
                                              borderColor = "white",
                                              borderWidth = 5,
@@ -65,7 +69,7 @@ output$spectree <- renderHighchart({
 
 output$regtree <- renderHighchart({
   highchart()%>%
-    hc_add_series_treemap(tm_rg, allowDrillToNode = TRUE, layoutAlgorithm = "squarified",
+    hc_add_series(data = tm_rg, type = "treemap", allowDrillToNode = TRUE, layoutAlgorithm = "squarified",
                           levels = list(list(level = 1,
                                              borderColor = "white",
                                              borderWidth = 5,
@@ -123,7 +127,7 @@ output$time <- renderPlotly({
               type = "scatter", mode = "lines", name = "Total", line = list(color = "black"))%>%
     layout(hovermode = "closest",
            xaxis = list(title = "Year"),
-           yaxis = list(title = "Number of Listings"),
+         yaxis = list(title = "Number of Listings"),
            legend = list(x = 0.05, y = 0.95, bordercolor = "black", borderwidth = 1))
 })
 

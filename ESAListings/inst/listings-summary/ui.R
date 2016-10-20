@@ -51,20 +51,20 @@ body <- dashboardBody(
       tabPanel("Taxa",
        fluidRow(column(1, br()),
         column(10,
-        h3("Listings by Taxonomic Group", align = "center"),
-        h4("The bar chart below breaks down the number of listed species by taxa,
-        and listing status.", br(), "The treemap at right organizes this information hierarchicaly,
-        with box sizes corresponding to the number of listed species. The treemap can be used to
-        visualize the breakdown of taxa within specific Regions.  Chose a Region using the sidebar selector.
-        To see the number of listed species in a given category by mousing over the boxes.
-        Finally, click on a Taxa to zoom in for detailed information on listings per category.")),
-        column(1, br())
-       ),
-       fluidRow(
-       box(highchartOutput("specbars")),
-       box(highchartOutput("regtree"))
-       )
-      ),
+          h3("Listings by Taxonomic Group", align = "center"),
+          h4("The bar chart below breaks down the number of listed species by taxa,
+              and listing status.", br(), "The treemap at right organizes this information hierarchicaly,
+              with box sizes corresponding to the number of listed species. The treemap can be used to
+              visualize the breakdown of taxa within specific Regions.  Chose a Region using the sidebar selector.
+              To see the number of listed species in a given category by mousing over the boxes.
+              Finally, click on a Taxa to zoom in for detailed information on listings per category.")),
+              column(1, br())
+          ),
+               fluidRow(
+                 box(highchartOutput("specbars")),
+                 box(highchartOutput("regtree"))
+               )
+                        ),
       tabPanel("Regions",
        fluidRow(column(1, br()),
         column(10,

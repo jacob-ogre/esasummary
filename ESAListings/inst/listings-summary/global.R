@@ -6,7 +6,6 @@ library(leaflet)
 library(plotly)
 library(treemap)
 library(shinydashboard)
-library(shinyjs)
 library(viridis)
 
 data("county_topo")
@@ -83,10 +82,16 @@ totals <- summarise(group_by(years, Year), total = sum(count))
 
 # create color palettes for
 list_pal <- c("yellow","red","black","green","purple","orange")
-name_pal <- c("yellow","red","black","green","purple","orange")
-names(name_pal) <- c("Candidate", "Endangered", "Experimental Population, Non-Essential", "Proposed", "Similarity of Appearance to a Threatened Taxon", "Threatened")
 #define pallete function for chloropleth map
 palfx <- colorNumeric(palette = c("midnightblue","yellow"), domain = c(0,75), na.color = "yellow")
+#define pallete funciton converting status names to colors
+stat_pal <- function(status){switch(status,
+                                    Candidate = "yellow",
+                                    Endangered = "red",
+                                    Proposed = "green",
+                                    Threatened = "orange",
+                                    Experimental = "black",
+                                    Similarity = "purple")}
 
 #create initial treemaps
 dat1 <- group_by(regions, Lead_Region, Status)%>%
@@ -94,18 +99,23 @@ dat1 <- group_by(regions, Lead_Region, Status)%>%
 dat2 <- group_by(regions,Group, Status)%>%
     summarize(count = sum(count))
 
-  tm_tx <- treemap(dat1,
-                   index = c("Lead_Region", "Status"),
-                   vSize = "count", type = "categorical", vColor = "Status",
-                   fontsize.labels = c(16, 0),
-                   align.labels = list(c("left","top"), c("center","center")),
-                   bg.labels = 0, palette = list_pal[names(name_pal)%in%dat1$Status])
-  tm_tx$tm$color[tm_tx$tm$level == 1] <- NA
+tm_tx <- list()
+  for(i in unique(dat1$Lead_Region)){
+    ls1 <- list(name = i, id = i, value = sum(dat1$count[dat1$Lead_Region == i]), color = NA)
+    tm_tx[[length(tm_tx)+1]] <- ls1
+  }
+  for(i in 1:length(dat1$count)){
+    ls2 <- list(parent = dat1$Lead_Region[i], name = dat1$Status[i], value = dat1$count[i], color = stat_pal(strsplit(dat1$Status[i]," ")[[1]][1]))
+    tm_tx[[length(tm_tx)+1]] <- ls2
+  }
 
-  tm_rg <- treemap(dat2,
-                   index = c("Group", "Status"),
-                   vSize = "count", type = "categorical", vColor = "Status",
-                   fontsize.labels = c(16, 0),
-                   align.labels = list(c("left","top"), c("center","center")),
-                   bg.labels = 0, palette = list_pal[names(name_pal)%in%dat2$Status])
-  tm_rg$tm$color[tm_rg$tm$level == 1] <- NA
+tm_rg <- list()
+ for(i in unique(dat2$Group)){
+   ls1 <- list(name = i, id = i, value = sum(dat2$count[dat2$Group == i]), color = NA)
+   tm_rg[[length(tm_rg)+1]] <- ls1
+ }
+ for(i in 1:length(dat2$count)){
+   ls2 <- list(parent = dat2$Group[i], name = dat2$Status[i], value = dat2$count[i], color = stat_pal(strsplit(dat2$Status[i]," ")[[1]][1]))
+   tm_rg[[length(tm_rg)+1]] <- ls2
+ }
+

@@ -80,14 +80,14 @@ server_area_page <- function(input, output, session) {
   })
 
   output$cn_cumm <- renderPlotly({
-    #cummulative number of counties per species
+  #cummulative number of counties per species
     plot_ly(arrange(counties, count), x = ~count)%>%
       add_lines(y = ~round(row_number(count)/nrow(counties), 3), name = "Cummulative",
             type = "scatter", mode = "lines",
             text = ~paste(round(row_number(count)/nrow(counties),3)*100,"% of counties contain", count, "or fewer species"),
             hoverinfo = "text")%>%
       add_histogram(histnorm = "probability", name = "Histogram",
-                    #text = ~paste("% of counties contain", "listed species"),
+                  #text = ~paste("% of counties contain", "listed species"),
                     hoverinfo = "none")%>%
       layout(title = "Listed Species per U.S. County",
              xaxis = list(title = "Number of Listed Species per County", type = "log", tickvals = c(0, 1, 5, 10, 50, 100, 1000)),
