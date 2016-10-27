@@ -5,6 +5,7 @@ library(highcharter)
 library(leaflet)
 library(plotly)
 library(treemap)
+library(shinyBS)
 library(shinydashboard)
 library(viridis)
 
@@ -51,6 +52,7 @@ regions$Status <- sapply(regions$Federal_Listing_Status, function(x)
   else{x})
 
 regions <- group_by(regions, Lead_Region, Group, Status)%>%
+  filter(Status != "Experimental Population, Non-Essential" & Status != "Similarity of Appearance to a Threatened Taxon")%>%
   summarise(count=n())
 
 regions <- as.data.frame(regions)
@@ -58,7 +60,8 @@ regions$Lead_Region[regions$Lead_Region != "NMFS"] <- paste("Region", regions$Le
 
 #create 'years' dataframe
 years <- mutate(TECP_date,Year = substr(First_Listed,9,12))%>%
-  select(Year, Federal_Listing_Status)
+  select(Year, Federal_Listing_Status)%>%
+  filter(Federal_Listing_Status == "Endangered"|Federal_Listing_Status == "Threatened")
 
 years$Status <- sapply(years$Federal_Listing_Status, function(x)
   if(x == "Proposed Endangered"|x == "Proposed Threatened"){
@@ -71,27 +74,31 @@ years <- group_by(years, Year,Status)%>%
 years$Year <- as.integer(years$Year)
 
 impute <- data.frame(Year = rep(seq(min(years$Year,na.rm=TRUE),
-                                    max(years$Year,na.rm=TRUE),1),6),
+                                    max(years$Year,na.rm=TRUE),1),2),
                      Status = rep(unique(years$Status),
                                   each = max(years$Year, na.rm =TRUE) - 1966))
 
 years <- right_join(years, impute, by = c("Year", "Status"))
 years$count[is.na(years$count)] <- 0
 
-totals <- summarise(group_by(years, Year), total = sum(count))
+totals <- group_by(years, Year)%>%
+            arrange(Year)%>%
+            summarise(total = sum(count))%>%
+            mutate(cumm = cumsum(total))
+
 
 # create color palettes for
-list_pal <- c("yellow","red","black","green","purple","orange")
+list_pal <- rev(substr(viridis(4),1,7)) #c("yellow","red","black","green","purple","orange")
 #define pallete function for chloropleth map
 palfx <- colorNumeric(palette = c("midnightblue","yellow"), domain = c(0,75), na.color = "yellow")
 #define pallete funciton converting status names to colors
 stat_pal <- function(status){switch(status,
-                                    Candidate = "yellow",
-                                    Endangered = "red",
-                                    Proposed = "green",
-                                    Threatened = "orange",
-                                    Experimental = "black",
-                                    Similarity = "purple")}
+                                    Candidate = list_pal[2],
+                                    Endangered = list_pal[1],
+                                    Proposed = list_pal[3],
+                                    Threatened = list_pal[4])}
+                                    #Experimental = substr(list_pal[5]),
+                                    #Similarity = substr(list_pal[6])}
 
 #create initial treemaps
 dat1 <- group_by(regions, Lead_Region, Status)%>%
@@ -119,3 +126,13 @@ tm_rg <- list()
    tm_rg[[length(tm_rg)+1]] <- ls2
  }
 
+
+#create all combos of region x status and group x status - need these for highcharter to do proper grouping
+#of stacked bar plots
+rg_combos <- data.frame(Lead_Region = rep(unique(regions$Lead_Region),each = 4),Status = rep(c("Endangered","Proposed","Threatened", "Candidate"),9))
+tx_combos <- data.frame(Group = rep(unique(regions$Group),each = 4),Status = rep(c("Endangered","Proposed","Threatened", "Candidate"),11))
+
+
+#tags$li(class = "dropdown", img(height = "50px", src = "01_DOW_LOGO_COLOR_300-01.png")),
+#tags$li(class = "dropdown", p(tags$b("Defenders of Wildlife"), br(), tags$b("Endangered Species Program")))
+#https://www.fws.gov/Endangered/media/regions/region-map.png

@@ -19,4 +19,7 @@ shinyServer(function(input,output, session){
          width=width)
   }, deleteFile=FALSE)
 
+  output$yesterday <- renderText({
+    paste0(as.character(format(Sys.Date()-1, "%m/%d/%Y")), ".")
+  })
 })

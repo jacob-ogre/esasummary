@@ -22,6 +22,7 @@ server_area_page <- function(input, output, session) {
                 #values = seq(0, 80, 10),
                 colors = palfx(seq(0, 80, 10)),
                 labels = c("- 0","- 10","- 20","- 30","- 40","- 50","- 60","- 70","> 80"))%>%
+      addLegend(title = "Click on the center of a county<br>to see the species listed there.", position = "topright", colors = NULL, labels = NULL)%>%
       addCircleMarkers(data = counties,
                       lng = ~INTPTLON,
                       lat = ~INTPTLAT,
@@ -67,13 +68,13 @@ server_area_page <- function(input, output, session) {
   output$sp_cumm <- renderPlotly({
     #cummulative number of counties per species
     py<-plot_ly(arrange(species, count), x = ~count, source = "sp_dist")%>%
-      add_lines(y = ~round(row_number(count)/nrow(species), 3), name = "Cummulative",
+      add_lines(y = ~round(row_number(count)/nrow(species), 3), name = "Cumulative",
             type = "scatter", mode = "lines",
             text = ~paste(round(row_number(count)/nrow(species),3)*100,"% of species occur in", count, "or fewer counties"), hoverinfo = "text")%>%
       add_histogram(histnorm = "probability", name = "Histogram", xbins = list(start = 0.5, end = 3102.5, size = 1),
                     text = ~paste("% of counties contain", "listed species"),
                     hoverinfo = "none")%>%
-      layout(title = "Listed Species Range Sizes",
+      layout(title = "Listed Species Range Sizes<br>(click to see species)",
              xaxis = list(title = "Number of Counties in Species' Range", type = "log", tickvals = c(0, 1, 5, 10, 50, 100, 500, 1000, 3000)),
              yaxis = list(title = "Percentile of Species"),
              legend = list(x = 0.05, y = 0.95))
@@ -82,7 +83,7 @@ server_area_page <- function(input, output, session) {
   output$cn_cumm <- renderPlotly({
   #cummulative number of counties per species
     plot_ly(arrange(counties, count), x = ~count)%>%
-      add_lines(y = ~round(row_number(count)/nrow(counties), 3), name = "Cummulative",
+      add_lines(y = ~round(row_number(count)/nrow(counties), 3), name = "Cumulative",
             type = "scatter", mode = "lines",
             text = ~paste(round(row_number(count)/nrow(counties),3)*100,"% of counties contain", count, "or fewer species"),
             hoverinfo = "text")%>%
