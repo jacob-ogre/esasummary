@@ -16,14 +16,14 @@ body <- dashboardBody(
   tags$head(
     tags$link(rel = "stylesheet", type = "text/css", href = "custom_styles.css")),
 
-  navbarPage(div(column(4,tags$a(href = "www.defenders.org", tags$img(src = "01_DOW_LOGO_COLOR_300-01.png", height = "80px", width = "80px"))), column(8, h4("Defenders of Widlife", br(), "Center for Conservation Innovation"))),
+  navbarPage(div(column(4,tags$a(href = "www.defenders.org", tags$img(src = "01_DOW_LOGO_COLOR_300-01.png", height = "80px"))), column(8, h4("Defenders of Widlife", br(), "Center for Conservation Innovation"))),
    tabPanel(h4("Overview"),id = "summary", icon=icon("binoculars"), fluidPage(
     fluidRow(
      column(12, h2("ESA Overview"),
       h4("Since 1973, the Endangered Species Act (ESA) has listed over 2,000 species as
         'Threatened' or 'Endangered'. The Fish and Wildlife Service (FWS) provides a",
         a(href = "http://www.fws.gov/endangered/what-we-do/listing-overview.html", " detailed
-        description of the listing process."),  "Below, you can explore the number of listed
+        description of the listing process."),  "Below, you can explore the number of domestic listed
         species by year as of", textOutput("yesterday", inline=TRUE))
      )
      ),
